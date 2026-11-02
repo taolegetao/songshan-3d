@@ -8,27 +8,46 @@ for(let k of [1,5,8]){let p=[];for(let j=2;j<tiers-1;j++){let v=rings[j][k];p.pu
 // Floating basin: broad soft elliptical pool with a translucent, tapered underside.
 const N=44;let top=[],lower=[];for(let k=0;k<N;k++){let a=k/N*2*Math.PI,r=1+.025*Math.sin(7*a)+.018*Math.cos(11*a);top.push(vec(Math.cos(a)*3.25*r,.1,Math.sin(a)*2.13*r));lower.push(vec(Math.cos(a)*2.35*r,-.58,Math.sin(a)*1.47*r))}for(let k=0;k<N;k++){poly([top[k],top[(k+1)%N],lower[(k+1)%N],lower[k]],{kind:'basin',t:k/N})}poly(top,{kind:'water'});
 // A crescent-shaped ascent: uneven stone clusters anchored to a curved route.
-// Reference-based gray model: independent cliff sheets, not a C-shaped tube.
-function mass(rows,phase){
-let N=12,rings=[];
-for(let i=0;i<rows.length;i++){
-let [x,y,w,z,d]=rows[i],ring=[];
+// Reference-led continuous C-shaped cliff, open toward screen-right at yaw 2.90.
+// This is one joined ribbon of 3D stone volumes, not a stack of pointed towers.
+function cliffSpine(nodes){
+const rings=[],N=18;
+for(let i=0;i<nodes.length;i++){
+let p=nodes[i],prev=nodes[Math.max(0,i-1)],next=nodes[Math.min(nodes.length-1,i+1)];
+let dx=next.x-prev.x,dy=next.y-prev.y,L=Math.hypot(dx,dy)||1;
+let nx=-dy/L,ny=dx/L,ring=[];
 for(let k=0;k<N;k++){
-let ang=k*2*Math.PI/N,noise=1+.07*Math.sin(ang*3+i*1.7+phase);
-ring.push(vec(x+Math.cos(ang)*w*.5*noise,y+.05*Math.cos(ang*2+i),z+Math.sin(ang)*d*noise));
+let ang=2*Math.PI*k/N,ir=1+.085*Math.sin(ang*3+i*1.7)+.05*Math.cos(ang*5-i);
+ring.push(vec(p.x+nx*Math.cos(ang)*p.r*ir,p.y+ny*Math.cos(ang)*p.r*ir,p.z+Math.sin(ang)*p.d*ir));
 }rings.push(ring);
 }
 for(let i=0;i<rings.length-1;i++)for(let k=0;k<N;k++){
-poly([rings[i][k],rings[i][(k+1)%N],rings[i+1][(k+1)%N],rings[i+1][k]],{kind:'stone',t:.43+i/rows.length*.18,shade:.09*Math.cos(k*2*Math.PI/N+phase),variation:rand(-.012,.012)});
+poly([rings[i][k],rings[i][(k+1)%N],rings[i+1][(k+1)%N],rings[i+1][k]],{kind:'stone',t:.30+i/rings.length*.42,shade:Math.sin(k/N*6.283)*.075,variation:rand(-.012,.012)});
 }
-poly(rings[0],{kind:'stone',t:.46,shade:-.12,variation:0});
-poly(rings[rings.length-1],{kind:'stone',t:.65,shade:.12,variation:0});
 }
-mass([[.75,5.4,.08,-.2,.25],[.9,6.1,.5,-.2,.4],[1.02,7.0,.95,-.2,.6],[1,7.8,1.35,-.2,.7],[.82,8.6,1.55,-.2,.74],[.57,9.4,1.4,-.2,.7],[.36,10.2,.95,-.2,.58],[.22,11.1,.25,-.2,.3],[.2,11.5,.05,-.2,.15]],1);
-mass([[-1.35,6,.06,-.7,.2],[-1.4,6.7,.3,-.7,.32],[-1.45,7.5,.65,-.7,.45],[-1.46,8.4,.95,-.7,.58],[-1.32,9.3,.85,-.7,.52],[-1.18,10.1,.48,-.7,.37],[-1.1,10.55,.05,-.7,.18]],2);
-mass([[1.7,2.3,.07,.25,.2],[1.65,3,.4,.25,.4],[1.55,3.8,.8,.25,.54],[1.45,4.6,1.2,.2,.66],[1.25,5.4,1.22,.15,.68],[1.08,6.2,.8,.1,.55],[1.0,6.8,.16,.08,.28]],3);
-mass([[.75,.2,.08,.6,.2],[.85,.85,.42,.6,.38],[.95,1.6,.85,.58,.5],[1.12,2.35,.9,.52,.53],[1.25,3,.35,.45,.32]],4);
-mass([[2.4,2.0,.05,-.3,.2],[2.38,2.7,.28,-.3,.32],[2.4,3.5,.48,-.3,.43],[2.45,4.1,.32,-.3,.35],[2.48,4.4,.05,-.3,.18]],5);
+cliffSpine([
+{x:1.75,y:.65,z:-.18,r:.68,d:.76},
+{x:1.72,y:1.85,z:-.20,r:.82,d:.83},
+{x:1.95,y:3.0,z:-.24,r:.93,d:.86},
+{x:1.82,y:4.25,z:-.31,r:.91,d:.83},
+{x:1.57,y:5.55,z:-.38,r:.96,d:.87},
+{x:1.22,y:6.75,z:-.44,r:1.02,d:.90},
+{x:.78,y:7.85,z:-.50,r:1.02,d:.84},
+{x:.36,y:8.85,z:-.56,r:.92,d:.78},
+{x:-.22,y:9.55,z:-.64,r:.77,d:.70},
+{x:-.78,y:10.15,z:-.68,r:.60,d:.57},
+{x:-1.03,y:10.72,z:-.72,r:.26,d:.34}
+]);
+const rocks=[
+{x:1.85,z:.18,base:.12,h:2.25,rx:.64,rz:.56,phase:1.1},
+{x:2.35,z:.02,base:2.6,h:2.25,rx:.52,rz:.50,phase:2.5,water:{side:2,length:1.45,width:.10}},
+{x:1.65,z:-.12,base:4.7,h:2.5,rx:.68,rz:.57,phase:3.3,water:{side:2,length:1.95,width:.10}},
+{x:.9,z:-.43,base:6.6,h:2.5,rx:.72,rz:.59,phase:1.7,water:{side:2,length:2.3,width:.12}},
+{x:-1.38,z:-.63,base:7.0,h:3.65,rx:.65,rz:.54,phase:2.2,water:{side:2,length:2.1,width:.10}},
+{x:-1.85,z:-.74,base:8.5,h:2.45,rx:.53,rz:.47,phase:4.0,water:{side:2,length:1.65,width:.09}},
+{x:.28,z:.25,base:.12,h:1.55,rx:.54,rz:.48,phase:5.0}
+];rocks.forEach(rock);
+// Waterfall ribbons are generated from actual rock mesh rings above.
 // Brush-like trails: stone slabs follow a sinuous path.
 function trail(points,width=.27){for(let i=0;i<points.length-1;i++){let a=points[i],b=points[i+1],dx=b.x-a.x,dz=b.z-a.z,L=Math.hypot(dx,dz)||1,nx=-dz/L*width/2,nz=dx/L*width/2;poly([vec(a.x+nx,a.y,a.z+nz),vec(a.x-nx,a.y,a.z-nz),vec(b.x-nx,b.y,b.z-nz),vec(b.x+nx,b.y,b.z+nz)],{kind:'path',t:i/points.length});line([vec(a.x+nx,a.y+.013,a.z+nz),vec(b.x+nx,b.y+.013,b.z+nz)],{kind:'ink',alpha:.22},.5)} }trail([vec(.75,.32,1.05),vec(.43,.67,.91),vec(.05,1.18,.9),vec(-.3,1.65,.76),vec(-.68,2.17,.52),vec(-1.04,2.8,.48),vec(-1.3,3.5,.27),vec(-1.45,4.12,.04),vec(-1.1,4.6,-.13),vec(-.6,5.15,-.25),vec(-.3,5.72,-.35),vec(-.45,6.45,-.47),vec(-.4,7.18,-.53)],.34);
 function beam(a,b,r,color){let dx=b.x-a.x,dz=b.z-a.z,rr=r;poly([vec(a.x-rr,a.y,a.z-rr),vec(a.x+rr,a.y,a.z-rr),vec(b.x+rr,b.y,b.z-rr),vec(b.x-rr,b.y,b.z-rr)],color);poly([vec(a.x+rr,a.y,a.z-rr),vec(a.x+rr,a.y,a.z+rr),vec(b.x+rr,b.y,b.z+rr),vec(b.x+rr,b.y,b.z-rr)],color)}
@@ -50,7 +69,6 @@ function project(v){let c=Math.cos(yaw),s=Math.sin(yaw),x=v.x*c-v.z*s,z=v.x*s+v.
  let b=Math.round(lerp(182,184,wash)+wash*23-shadow*9);
  return `rgb(${r},${g},${b})`}
 case'basin':return `rgba(116,185,195,${.68+.07*Math.cos(st.t*8)})`;case'water':return 'rgba(148,211,209,.82)';case'fall':return `rgba(108,187,195,${(.76*Math.pow(1-st.t,.7))})`;case'waterSource':return 'rgba(100,173,181,.68)';case'bridge':return '#aaa99f';case'path':return '#b9b9ad';case'platform':return '#b9b7ae';case'wood':return '#756c5d';case'roof':return st.shade>0?'#414b48':'#505b56';case'roofEdge':return '#313d3a';case'foliage':return ['#6c8073','#738779','#61776b'][Math.round(st.t*2)];case'ink':return `rgba(80,87,78,${st.alpha})`;}return '#aaa'}
-objects.splice(0,objects.length,...objects.filter(o=>o.style&&o.style.kind==='stone'));
 function render(){ctx.clearRect(0,0,W,H);let bg=ctx.createLinearGradient(0,0,0,H);bg.addColorStop(0,'#d8ccb2');bg.addColorStop(.58,'#e7dbc2');bg.addColorStop(1,'#e9dfca');ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);let projected=objects.map(o=>{let pts=o.pts.map(project);return {...o,screen:pts,depth:pts.reduce((a,p)=>a+p.depth,0)/pts.length-(o.style.kind==='fall'?1.2:0)}}).sort((a,b)=>b.depth-a.depth);for(let o of projected){let p=o.screen;if(!p.length)continue;ctx.beginPath();ctx.moveTo(p[0].x,p[0].y);for(let j=1;j<p.length;j++)ctx.lineTo(p[j].x,p[j].y);if(o.type==='poly'){ctx.closePath();ctx.fillStyle=color(o.style,o.depth);ctx.fill();}else{ctx.strokeStyle=color(o.style,o.depth);ctx.lineWidth=o.width||.7;ctx.lineCap='round';ctx.lineJoin='round';ctx.stroke();}} // warm paper veil, faint grain
 let veil=ctx.createLinearGradient(0,H*.1,W,H);veil.addColorStop(0,'rgba(246,237,217,.025)');veil.addColorStop(1,'rgba(255,246,226,.11)');ctx.fillStyle=veil;ctx.fillRect(0,0,W,H);
 if(!drag){yaw+=vy;pitch=clamp(pitch+vp,-.52,.82);vy*=.90;vp*=.88;if(Math.abs(vy)<.00005)vy=0;if(Math.abs(vp)<.00005)vp=0}requestAnimationFrame(render)}
