@@ -8,7 +8,45 @@ for(let k of [1,5,8]){let p=[];for(let j=2;j<tiers-1;j++){let v=rings[j][k];p.pu
 // Floating basin: broad soft elliptical pool with a translucent, tapered underside.
 const N=44;let top=[],lower=[];for(let k=0;k<N;k++){let a=k/N*2*Math.PI,r=1+.025*Math.sin(7*a)+.018*Math.cos(11*a);top.push(vec(Math.cos(a)*3.25*r,.1,Math.sin(a)*2.13*r));lower.push(vec(Math.cos(a)*2.35*r,-.58,Math.sin(a)*1.47*r))}for(let k=0;k<N;k++){poly([top[k],top[(k+1)%N],lower[(k+1)%N],lower[k]],{kind:'basin',t:k/N})}poly(top,{kind:'water'});
 // A crescent-shaped ascent: uneven stone clusters anchored to a curved route.
-const rocks=[{x:1.3,z:.12,base:.12,h:3.1,rx:.85,rz:.72,lean:-.1,phase:1.2},{x:.22,z:-.35,base:.12,h:2.5,rx:.82,rz:.72,lean:.16,phase:2.7},{x:-1.4,z:.18,base:.1,h:1.7,rx:.55,rz:.48,phase:1.1},{x:1.38,z:-.28,base:2.6,h:3.5,rx:.8,rz:.65,lean:-.18,phase:3.2,water:{side:2,length:1.1,width:.11}},{x:.5,z:-.4,base:4.5,h:3.5,rx:.95,rz:.73,lean:.1,phase:4.1,water:{side:2,length:1.6,width:.12}},{x:.25,z:-.62,base:7.2,h:4.1,rx:.91,rz:.7,lean:-.12,phase:2.1,water:{side:2,length:2,width:.12}},{x:-1.48,z:-.82,base:7.1,h:3.5,rx:.77,rz:.63,lean:.12,phase:3.7,water:{side:3,length:2.4,width:.12}},{x:-1,z:-.85,base:9.05,h:2.15,rx:.59,rz:.51,phase:1.8},{x:-1.8,z:-.68,base:8.65,h:2.15,rx:.53,rz:.48,lean:.12,phase:5.1,water:{side:2,length:1.65,width:.1}},{x:2.18,z:.28,base:.16,h:1.4,rx:.44,rz:.42,phase:2.3}];rocks.forEach(rock);
+// Reference-led continuous C-shaped cliff, open toward screen-right at yaw 2.90.
+// This is one joined ribbon of 3D stone volumes, not a stack of pointed towers.
+function cliffSpine(nodes){
+const rings=[],N=18;
+for(let i=0;i<nodes.length;i++){
+let p=nodes[i],prev=nodes[Math.max(0,i-1)],next=nodes[Math.min(nodes.length-1,i+1)];
+let dx=next.x-prev.x,dy=next.y-prev.y,L=Math.hypot(dx,dy)||1;
+let nx=-dy/L,ny=dx/L,ring=[];
+for(let k=0;k<N;k++){
+let ang=2*Math.PI*k/N,ir=1+.085*Math.sin(ang*3+i*1.7)+.05*Math.cos(ang*5-i);
+ring.push(vec(p.x+nx*Math.cos(ang)*p.r*ir,p.y+ny*Math.cos(ang)*p.r*ir,p.z+Math.sin(ang)*p.d*ir));
+}rings.push(ring);
+}
+for(let i=0;i<rings.length-1;i++)for(let k=0;k<N;k++){
+poly([rings[i][k],rings[i][(k+1)%N],rings[i+1][(k+1)%N],rings[i+1][k]],{kind:'stone',t:.30+i/rings.length*.42,shade:Math.sin(k/N*6.283)*.075,variation:rand(-.012,.012)});
+}
+}
+cliffSpine([
+{x:1.75,y:.65,z:-.18,r:.68,d:.76},
+{x:1.72,y:1.85,z:-.20,r:.82,d:.83},
+{x:1.95,y:3.0,z:-.24,r:.93,d:.86},
+{x:1.82,y:4.25,z:-.31,r:.91,d:.83},
+{x:1.57,y:5.55,z:-.38,r:.96,d:.87},
+{x:1.22,y:6.75,z:-.44,r:1.02,d:.90},
+{x:.78,y:7.85,z:-.50,r:1.02,d:.84},
+{x:.36,y:8.85,z:-.56,r:.92,d:.78},
+{x:-.22,y:9.55,z:-.64,r:.77,d:.70},
+{x:-.78,y:10.15,z:-.68,r:.60,d:.57},
+{x:-1.03,y:10.72,z:-.72,r:.26,d:.34}
+]);
+const rocks=[
+{x:1.85,z:.18,base:.12,h:2.25,rx:.64,rz:.56,phase:1.1},
+{x:2.35,z:.02,base:2.6,h:2.25,rx:.52,rz:.50,phase:2.5,water:{side:2,length:1.45,width:.10}},
+{x:1.65,z:-.12,base:4.7,h:2.5,rx:.68,rz:.57,phase:3.3,water:{side:2,length:1.95,width:.10}},
+{x:.9,z:-.43,base:6.6,h:2.5,rx:.72,rz:.59,phase:1.7,water:{side:2,length:2.3,width:.12}},
+{x:-1.38,z:-.63,base:7.0,h:3.65,rx:.65,rz:.54,phase:2.2,water:{side:2,length:2.1,width:.10}},
+{x:-1.85,z:-.74,base:8.5,h:2.45,rx:.53,rz:.47,phase:4.0,water:{side:2,length:1.65,width:.09}},
+{x:.28,z:.25,base:.12,h:1.55,rx:.54,rz:.48,phase:5.0}
+];rocks.forEach(rock);
 // Waterfall ribbons are generated from actual rock mesh rings above.
 // Brush-like trails: stone slabs follow a sinuous path.
 function trail(points,width=.27){for(let i=0;i<points.length-1;i++){let a=points[i],b=points[i+1],dx=b.x-a.x,dz=b.z-a.z,L=Math.hypot(dx,dz)||1,nx=-dz/L*width/2,nz=dx/L*width/2;poly([vec(a.x+nx,a.y,a.z+nz),vec(a.x-nx,a.y,a.z-nz),vec(b.x-nx,b.y,b.z-nz),vec(b.x+nx,b.y,b.z+nz)],{kind:'path',t:i/points.length});line([vec(a.x+nx,a.y+.013,a.z+nz),vec(b.x+nx,b.y+.013,b.z+nz)],{kind:'ink',alpha:.22},.5)} }trail([vec(.75,.32,1.05),vec(.43,.67,.91),vec(.05,1.18,.9),vec(-.3,1.65,.76),vec(-.68,2.17,.52),vec(-1.04,2.8,.48),vec(-1.3,3.5,.27),vec(-1.45,4.12,.04),vec(-1.1,4.6,-.13),vec(-.6,5.15,-.25),vec(-.3,5.72,-.35),vec(-.45,6.45,-.47),vec(-.4,7.18,-.53)],.34);
